@@ -789,7 +789,7 @@ MonoBehaviour:
   - {fileID: 2915029873176705244, guid: 3163ddd82c98c3545bcee41230480b09, type: 3}
   - {fileID: 9057235646182911196, guid: 913948dba52e737449e165f22b2ce309, type: 3}
   vector3Base: {x: 0.8, y: 0.8, z: 0.8}
-  obstaclePrefab: {fileID: 4247587000288080145, guid: d5758c91e3516504987630efb65ff9ee, type: 3}
+  obstaclePrefab: {fileID: 6945647291313568819, guid: 7349b2b987daf8f42b7ce9399ae15e49, type: 3}
   JogadasText: {fileID: 474216701}
   MaxJogadas: 10
   gameManager: {fileID: 721332084}

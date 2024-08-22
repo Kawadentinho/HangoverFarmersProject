@@ -13,10 +13,16 @@ public class Board : MonoBehaviour
     public Vector3 vector3Base;
     public GameObject obstaclePrefab;
     public TextMeshProUGUI JogadasText;
+    public SpriteRenderer objetivo;
+    public SpriteRenderer objetivoImage;
+    public int maxObejetivo = 10;
+    private int currentObjective;
+    public TextMeshProUGUI obejectiveText;
     public int MaxJogadas = 10;
     private int currentJogadas;
     public GameManager gameManager;
     public bool cabo;
+    public bool aumentei = false;
   
 
     void Start()
@@ -29,6 +35,7 @@ public class Board : MonoBehaviour
     private void Update()
     {
         UpdateJogadaText();
+        UpdateObjectiveText();
         if (currentJogadas <= 0 && !cabo)
         {
             cabo = true;
@@ -69,7 +76,8 @@ public class Board : MonoBehaviour
                 }
             }
         }
-        CheckForMatches();
+        List<Piece> piecesDestroyed = CheckForMatches(out int totalDestroyed);
+        CheckObjective(piecesDestroyed);
     }
 
     int RandomFrut()
@@ -81,6 +89,13 @@ public class Board : MonoBehaviour
     {
         JogadasText.text = currentJogadas.ToString();
       
+    }
+
+    private void UpdateObjectiveText()
+    {
+        obejectiveText.text = currentObjective.ToString() + "/" + maxObejetivo;
+       // objetivoImage = objetivo;
+        
     }
 
     public void SelectPiece(Piece piece)
@@ -137,12 +152,14 @@ public class Board : MonoBehaviour
         piece2.AnimateScale(vector3Base, 0.2f);
         selectedPiece = null;
         currentJogadas--;
-        CheckForMatches();
+        List<Piece> piecesDestroyed = CheckForMatches(out int totalDestroyed);
+        CheckObjective(piecesDestroyed);
     }
 
-    void CheckForMatches()
+    List<Piece> CheckForMatches(out int totalDestroyed)
     {
         List<Piece> piecesToDestroy = new List<Piece>();
+        totalDestroyed = 0;
 
         for (int x = 0; x < width; x++)
         {
@@ -170,7 +187,7 @@ public class Board : MonoBehaviour
                         for (int k = 0; k < matchLength; k++)
                         {
                             piecesToDestroy.Add(pieces[x + k, y]);
-
+                            totalDestroyed++;
                         }
                     }
                 }
@@ -195,6 +212,7 @@ public class Board : MonoBehaviour
                         for (int k = 0; k < matchLength; k++)
                         {
                             piecesToDestroy.Add(pieces[x, y + k]);
+                            totalDestroyed++;
                         }
                     }
                 }
@@ -212,6 +230,25 @@ public class Board : MonoBehaviour
 
         DestroyAdjacentObstacles(piecesToDestroy);
         StartCoroutine(RefillBoard());
+
+        return piecesToDestroy;
+    }
+
+    void CheckObjective(List<Piece> piecesDestroyed)
+    {
+        FrutType objetivoFrutType = objetivo.GetComponent<Piece>().frutType;
+        int destroyedCount = 0;
+
+        foreach (Piece piece in piecesDestroyed)
+        {
+            if (piece.frutType == objetivoFrutType)
+            {
+                destroyedCount++;
+            }
+        }
+
+        currentObjective += destroyedCount;
+        
     }
 
     void DestroyAdjacentObstacles(List<Piece> matchedPieces)
@@ -283,7 +320,8 @@ public class Board : MonoBehaviour
         }
 
         yield return new WaitForSeconds(0.5f); // Tempo extra para animação
-        CheckForMatches(); // Verificar novas correspondências após preencher
+        List<Piece> piecesDestroyed = CheckForMatches(out int totalDestroyed);
+        CheckObjective(piecesDestroyed);
     }
 
     IEnumerator MovePiece(Piece piece, Vector3 newPosition)
@@ -300,5 +338,8 @@ public class Board : MonoBehaviour
         piece.transform.position = newPosition;
     }
 
-
+    public void AumentarVida()
+    {
+            currentJogadas++;
+    }
 }

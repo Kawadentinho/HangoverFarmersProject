@@ -223,10 +223,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 786730465}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.50006104, y: -0.000061035156}
-  m_SizeDelta: {x: -1, y: 0.00012207031}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 5, y: 0.24991}
+  m_SizeDelta: {x: 437.3715, y: 520.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &424499794
 MonoBehaviour:
@@ -392,10 +392,10 @@ RectTransform:
   - {fileID: 1116116496}
   m_Father: {fileID: 786730465}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.3497778, y: 0.404}
-  m_AnchorMax: {x: 0.64981484, y: 0.5666875}
-  m_AnchoredPosition: {x: 0.00010681152, y: 0.0002746582}
-  m_SizeDelta: {x: -0.00018311, y: 0.0005188}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0.16986084, y: -17.5}
+  m_SizeDelta: {x: -694.7472, y: -435.9489}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &637769770
 MonoBehaviour:
@@ -443,14 +443,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 891025844}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: updateScene
+        m_MethodName: voltar
         m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: main
+          m_StringArgument: FarmHub
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &637769771
@@ -623,6 +623,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6769d77d74ab2e645a549bbbf9aa2585, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameOverUI: {fileID: 0}
 --- !u!4 &891025845
 Transform:
   m_ObjectHideFlags: 0

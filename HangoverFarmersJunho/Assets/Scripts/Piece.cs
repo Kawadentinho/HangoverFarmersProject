@@ -58,6 +58,7 @@ public enum FrutType
     public int x; // Posição X da peça no tabuleiro
     public int y; // Posição Y da peça no tabuleiro
     public Board board; // Referência ao tabuleiro
+    public bool isInvisible; // Determina se a peça é invisível
 
     public void Init(int x, int y, Board board) // Inicializa a peça com posição e referência ao tabuleiro
     {
@@ -68,7 +69,15 @@ public enum FrutType
 
     void OnMouseDown() // Chamado quando a peça é clicada
     {
-        board.SelectPiece(this); // Seleciona a peça no tabuleiro
+        if (!isInvisible) // Somente seleciona a peça se não for invisível
+        {
+            board.SelectPiece(this);
+        }
+    }
+
+    public void SetVisibility(bool isVisible) // Define a visibilidade da peça
+    {
+        GetComponent<Renderer>().enabled = isVisible;
     }
 
     public void AnimateScale(Vector3 targetScale, float duration) // Anima a escala da peça

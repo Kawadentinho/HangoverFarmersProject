@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
+using TMPro;
 
 public class Board : MonoBehaviour
 {
@@ -10,7 +10,7 @@ public class Board : MonoBehaviour
     public GameObject[] piecePrefab;
     public Piece[,] pieces;
     private Piece selectedPiece;
-    public Vector3 vector3Base;
+    public Vector3 vector3Base = new Vector3(1, 1, 1); // Valor padrão para a escala
     public GameObject obstaclePrefab;
     public TextMeshProUGUI JogadasText;
     public SpriteRenderer objetivo;
@@ -22,8 +22,8 @@ public class Board : MonoBehaviour
     private int currentJogadas;
     public GameManager gameManager;
     public bool cabo;
+
     public bool aumentei = false;
-  
 
     void Start()
     {
@@ -36,34 +36,33 @@ public class Board : MonoBehaviour
     {
         UpdateJogadaText();
         UpdateObjectiveText();
+
         if (currentJogadas <= 0 && !cabo)
         {
             cabo = true;
             gameManager.gameOver();
-            Debug.Log("moleu");
+            Debug.Log("Game Over");
         }
     }
 
     void InitializeBoard()
     {
+        binaryArrayTest binaryArray = GetComponent<binaryArrayTest>(); // Obtém o componente do BinaryArrayTest
+        bool[] initialBools = binaryArray.GetInitialBools(); // Obtém a matriz binária
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                if (Random.value < 0.1f) // 10% de chance de ser um obstáculo
+                int index = x + y * width;
+                if (index < initialBools.Length && initialBools[index])
                 {
-                    GameObject newObstacle = Instantiate(obstaclePrefab, new Vector3(x, y, 0), Quaternion.identity);
-                    if (newObstacle != null)
-                    {
-                        pieces[x, y] = newObstacle.GetComponent<Piece>();
-                        if (pieces[x, y] != null)
-                        {
-                            pieces[x, y].Init(x, y, this);
-                        }
-                    }
+                    // Se a matriz binária indica que há um espaço vazio aqui
+                    pieces[x, y] = CreateEmptyPiece(x, y);
                 }
                 else
                 {
+                    // Caso contrário, crie uma peça normal
                     GameObject newPiece = Instantiate(piecePrefab[RandomFrut()], new Vector3(x, y, 0), Quaternion.identity);
                     if (newPiece != null)
                     {
@@ -76,8 +75,19 @@ public class Board : MonoBehaviour
                 }
             }
         }
+
         List<Piece> piecesDestroyed = CheckForMatches(out int totalDestroyed);
         CheckObjective(piecesDestroyed);
+    }
+
+    Piece CreateEmptyPiece(int x, int y)
+    {
+        GameObject emptyObject = new GameObject("EmptyPiece");
+        Piece emptyPiece = emptyObject.AddComponent<Piece>();
+        emptyPiece.frutType = FrutType.Vazio;
+        emptyPiece.Init(x, y, this);
+        emptyPiece.SetVisibility(false); // Peça invisível
+        return emptyPiece;
     }
 
     int RandomFrut()
@@ -88,14 +98,11 @@ public class Board : MonoBehaviour
     private void UpdateJogadaText()
     {
         JogadasText.text = currentJogadas.ToString();
-      
     }
 
     private void UpdateObjectiveText()
     {
-        obejectiveText.text = currentObjective.ToString() + "/" + maxObejetivo;
-       // objetivoImage = objetivo;
-        
+        obejectiveText.text = $"{currentObjective}/{maxObejetivo}";
     }
 
     public void SelectPiece(Piece piece)
@@ -167,6 +174,7 @@ public class Board : MonoBehaviour
             {
                 if (pieces[x, y] == null) continue;
 
+                // Verifica linha horizontal
                 if (x < width - 2)
                 {
                     int matchLength = 1;
@@ -192,6 +200,7 @@ public class Board : MonoBehaviour
                     }
                 }
 
+                // Verifica coluna vertical
                 if (y < height - 2)
                 {
                     int matchLength = 1;
@@ -247,43 +256,36 @@ public class Board : MonoBehaviour
             }
         }
 
-        currentObjective += destroyedCount;
-        
-    }
-
-    void DestroyAdjacentObstacles(List<Piece> matchedPieces)
-    {
-        HashSet<Piece> obstaclesToDestroy = new HashSet<Piece>();
-
-        foreach (Piece piece in matchedPieces)
+        if (destroyedCount > 0)
         {
-            int x = piece.x;
-            int y = piece.y;
-
-            if (x > 0 && pieces[x - 1, y]?.frutType == FrutType.Obstacle)
+            currentObjective += destroyedCount;
+            // Verifica se o objetivo foi alcançado
+            if (currentObjective >= maxObejetivo)
             {
-                obstaclesToDestroy.Add(pieces[x - 1, y]);
-            }
-            if (x < width - 1 && pieces[x + 1, y]?.frutType == FrutType.Obstacle)
-            {
-                obstaclesToDestroy.Add(pieces[x + 1, y]);
-            }
-            if (y > 0 && pieces[x, y - 1]?.frutType == FrutType.Obstacle)
-            {
-                obstaclesToDestroy.Add(pieces[x, y - 1]);
-            }
-            if (y < height - 1 && pieces[x, y + 1]?.frutType == FrutType.Obstacle)
-            {
-                obstaclesToDestroy.Add(pieces[x, y + 1]);
+               // gameManager.LevelComplete();
             }
         }
+    }
 
-        foreach (Piece obstacle in obstaclesToDestroy)
+    void DestroyAdjacentObstacles(List<Piece> piecesToDestroy)
+    {
+        foreach (Piece piece in piecesToDestroy)
         {
-            if (obstacle != null)
+            if (piece != null && piece.frutType == FrutType.Obstacle)
             {
-                pieces[obstacle.x, obstacle.y] = null;
-                Destroy(obstacle.gameObject);
+                for (int x = piece.x - 1; x <= piece.x + 1; x++)
+                {
+                    for (int y = piece.y - 1; y <= piece.y + 1; y++)
+                    {
+                        if (x >= 0 && x < width && y >= 0 && y < height && pieces[x, y] != null)
+                        {
+                            if (pieces[x, y].frutType != FrutType.Obstacle)
+                            {
+                                piecesToDestroy.Add(pieces[x, y]);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -292,54 +294,55 @@ public class Board : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
 
+        binaryArrayTest binaryArray = GetComponent<binaryArrayTest>();
+        bool[] initialBools = binaryArray.GetInitialBools();
+
+        // 1. Desce todas as peças
         for (int x = 0; x < width; x++)
         {
-            int emptyCount = 0;
             for (int y = 0; y < height; y++)
             {
-                if (pieces[x, y] == null)
-                {
-                    emptyCount++;
-                }
-                else if (emptyCount > 0)
-                {
-                    pieces[x, y - emptyCount] = pieces[x, y];
-                    pieces[x, y].Init(x, y - emptyCount, this);
-                    StartCoroutine(MovePiece(pieces[x, y], new Vector3(x, y - emptyCount, 0)));
-                    pieces[x, y] = null;
-                }
-            }
+                int index = x + y * width;
 
-            for (int y = height - emptyCount; y < height; y++)
-            {
-                GameObject newPiece = Instantiate(piecePrefab[RandomFrut()], new Vector3(x, height, 0), Quaternion.identity);
-                pieces[x, y] = newPiece.GetComponent<Piece>();
-                pieces[x, y].Init(x, y, this);
-                StartCoroutine(MovePiece(pieces[x, y], new Vector3(x, y, 0)));
+                if (pieces[x, y] == null && !initialBools[index]) // Se estiver vazio e não for um espaço vazio fixo
+                {
+                    // Procura a peça mais próxima acima para descer
+                    for (int k = y + 1; k < height; k++)
+                    {
+                        if (pieces[x, k] != null)
+                        {
+                            pieces[x, k].Init(x, y, this);
+                            pieces[x, y] = pieces[x, k];
+                            pieces[x, k] = null;
+                            pieces[x, y].transform.position = new Vector3(x, y, 0);
+                            break;
+                        }
+                    }
+                }
             }
         }
 
-        yield return new WaitForSeconds(0.5f); // Tempo extra para animação
-        List<Piece> piecesDestroyed = CheckForMatches(out int totalDestroyed);
-        CheckObjective(piecesDestroyed);
-    }
-
-    IEnumerator MovePiece(Piece piece, Vector3 newPosition)
-    {
-        float timeToMove = 0.1f;
-        float elapsedTime = 0;
-
-        while (elapsedTime < timeToMove)
+        // 2. Refill dos espaços vazios restantes no topo
+        for (int x = 0; x < width; x++)
         {
-            piece.transform.position = Vector3.MoveTowards(piece.transform.position, newPosition, (Time.deltaTime / timeToMove) * Vector3.Distance(piece.transform.position, newPosition));
-            elapsedTime += Time.deltaTime;
-            yield return null;
+            for (int y = 0; y < height; y++)
+            {
+                int index = x + y * width;
+
+                if (pieces[x, y] == null && !initialBools[index]) // Se ainda estiver vazio e não for espaço fixo
+                {
+                    GameObject newPiece = Instantiate(piecePrefab[RandomFrut()], new Vector3(x, y, 0), Quaternion.identity);
+                    if (newPiece != null)
+                    {
+                        pieces[x, y] = newPiece.GetComponent<Piece>();
+                        pieces[x, y].Init(x, y, this);
+                    }
+                }
+            }
         }
-        piece.transform.position = newPosition;
     }
 
-    public void AumentarVida()
-    {
-            currentJogadas++;
-    }
+
 }
+
+

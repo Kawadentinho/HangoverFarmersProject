@@ -9,6 +9,7 @@ public class levelSelector : MonoBehaviour
     public void LoadLevel(string levelName)
     {
         SceneManager.LoadScene(levelName);
+        EnergySystem.instance.initializedscene();
     }
 }
 

@@ -22,8 +22,9 @@ public class Board : MonoBehaviour
     private int currentJogadas;
     public GameManager gameManager;
     public bool cabo;
-
+    private bool isRefilling = false; // Variável para controlar o estado de refill
     public bool aumentei = false;
+    
 
     void Start()
     {
@@ -41,6 +42,7 @@ public class Board : MonoBehaviour
         {
             cabo = true;
             gameManager.gameOver();
+
             Debug.Log("Game Over");
         }
     }
@@ -107,7 +109,7 @@ public class Board : MonoBehaviour
 
     public void SelectPiece(Piece piece)
     {
-        if (currentJogadas <= 0) return;
+        if (currentJogadas <= 0 || isRefilling) return; // Impede a seleção durante o refill
         if (piece.frutType == FrutType.Obstacle) return; // Impede a seleção de peças de obstáculo
 
         if (selectedPiece == null)
@@ -290,31 +292,45 @@ public class Board : MonoBehaviour
         }
     }
 
+    IEnumerator AnimatePieceMovement(Piece piece, Vector3 targetPosition, float duration)
+    {
+        Vector3 startPosition = piece.transform.position;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            piece.transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime / duration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        piece.transform.position = targetPosition;
+    }
+
     IEnumerator RefillBoard()
     {
         yield return new WaitForSeconds(0.5f);
 
         binaryArrayTest binaryArray = GetComponent<binaryArrayTest>();
         bool[] initialBools = binaryArray.GetInitialBools();
+        List<IEnumerator> animations = new List<IEnumerator>();
 
-        // 1. Desce todas as peças
+        // Primeiro movimento das peças existentes para os espaços vazios
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
                 int index = x + y * width;
-
-                if (pieces[x, y] == null && !initialBools[index]) // Se estiver vazio e não for um espaço vazio fixo
+                if (pieces[x, y] == null && (index >= initialBools.Length || !initialBools[index])) // Evitar mover para espaços "vazios"
                 {
-                    // Procura a peça mais próxima acima para descer
                     for (int k = y + 1; k < height; k++)
                     {
                         if (pieces[x, k] != null)
                         {
+                            animations.Add(AnimatePieceMovement(pieces[x, k], new Vector3(x, y, 0), 0.3f));
                             pieces[x, k].Init(x, y, this);
                             pieces[x, y] = pieces[x, k];
                             pieces[x, k] = null;
-                            pieces[x, y].transform.position = new Vector3(x, y, 0);
                             break;
                         }
                     }
@@ -322,23 +338,49 @@ public class Board : MonoBehaviour
             }
         }
 
-        // 2. Refill dos espaços vazios restantes no topo
+        // Executa todas as animações de queda em paralelo
+        foreach (IEnumerator animation in animations)
+        {
+            StartCoroutine(animation);
+        }
+        yield return new WaitForSeconds(0.3f);
+
+        animations.Clear();
+
+        // Agora faz o refill para os espaços vazios que não são blocos vazios
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
                 int index = x + y * width;
 
-                if (pieces[x, y] == null && !initialBools[index]) // Se ainda estiver vazio e não for espaço fixo
+                // Verifica se o espaço pode ser preenchido e não é um espaço que deve ficar vazio
+                if (pieces[x, y] == null && (index >= initialBools.Length || !initialBools[index]))
                 {
-                    GameObject newPiece = Instantiate(piecePrefab[RandomFrut()], new Vector3(x, y, 0), Quaternion.identity);
-                    if (newPiece != null)
+                    GameObject newPiece = Instantiate(piecePrefab[RandomFrut()], new Vector3(x, height, 0), Quaternion.identity); // Cria a peça fora da tela
+                    pieces[x, y] = newPiece.GetComponent<Piece>();
+                    if (pieces[x, y] != null)
                     {
-                        pieces[x, y] = newPiece.GetComponent<Piece>();
                         pieces[x, y].Init(x, y, this);
+                        animations.Add(AnimatePieceMovement(pieces[x, y], new Vector3(x, y, 0), 0.3f)); // Anima o movimento da peça até o destino
                     }
                 }
             }
+        }
+
+        // Executa todas as animações de refill em paralelo
+        foreach (IEnumerator animation in animations)
+        {
+            StartCoroutine(animation);
+        }
+        yield return new WaitForSeconds(0.3f);
+
+        // Após o refill, verifica por novos matches
+        List<Piece> piecesDestroyed = CheckForMatches(out int totalDestroyed);
+        if (piecesDestroyed.Count > 0)
+        {
+            CheckObjective(piecesDestroyed);
+            yield return StartCoroutine(RefillBoard()); // Certifica que checa por matches repetidamente até não restar mais matches
         }
     }
 

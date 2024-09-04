@@ -19,7 +19,7 @@ public class binaryArrayTest : MonoBehaviour
         if (instance == null)
         {
             instance = this; // Define a instância para este objeto
-            DontDestroyOnLoad(gameObject); // Não destrói o objeto ao carregar uma nova cena
+         //   DontDestroyOnLoad(gameObject); // Não destrói o objeto ao carregar uma nova cena
         }
         else if (instance != this)
         {

@@ -992,13 +992,13 @@ MonoBehaviour:
   - {fileID: 8838499904282740777, guid: 88339dc5501b1df4bbf8f2cbcb692b92, type: 3}
   - {fileID: 792285391824160202, guid: 02ead337c9265d1449ce017a2ef544c4, type: 3}
   - {fileID: 6874434505175374339, guid: 48f4979ab729d1440b4d083e886c57ad, type: 3}
+  - {fileID: 9057235646182911196, guid: 913948dba52e737449e165f22b2ce309, type: 3}
   - {fileID: 3612017322786362154, guid: a87420bb18f88f0418b1b9e9962e1b44, type: 3}
   - {fileID: 625396640655841666, guid: 9d7298d9d2329294eb0bdd8ac25903a6, type: 3}
   - {fileID: 6319861555613119749, guid: 256254138fe544c43a21812514f9b104, type: 3}
   - {fileID: 9183981850829403422, guid: 79b7dfacb2c627b4bb8e7f163d475175, type: 3}
   - {fileID: 5018873714049314917, guid: 70931bad00c870d4b90dd5d3d3de209a, type: 3}
   - {fileID: 2915029873176705244, guid: 3163ddd82c98c3545bcee41230480b09, type: 3}
-  - {fileID: 9057235646182911196, guid: 913948dba52e737449e165f22b2ce309, type: 3}
   vector3Base: {x: 0.8, y: 0.8, z: 0.8}
   obstaclePrefab: {fileID: 6945647291313568819, guid: 7349b2b987daf8f42b7ce9399ae15e49, type: 3}
   JogadasText: {fileID: 474216701}
@@ -1006,7 +1006,7 @@ MonoBehaviour:
   objetivoImage: {fileID: 0}
   maxObejetivo: 20
   obejectiveText: {fileID: 1217384587}
-  MaxJogadas: 20
+  MaxJogadas: 5
   gameManager: {fileID: 721332084}
   cabo: 0
   aumentei: 0

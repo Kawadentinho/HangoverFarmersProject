@@ -2,29 +2,44 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System;
+using Unity.VisualScripting;
+using System.IO;
 
 public class Board : MonoBehaviour
 {
     public int width;
     public int height;
+    public int MaxJogadas = 10;
+    private int currentJogadas;
+    public int maxObejetivo = 10;
+    private int currentObjective;
+
+
+    public GameObject powerUpPrefab; // Referência ao prefab do power-up
+    public GameObject obstaclePrefab;
     public GameObject[] piecePrefab;
+    public GameManager gameManager;
+    public GameObject linhaDestruidoraPrefab;
+
+
     public Piece[,] pieces;
     private Piece selectedPiece;
     public Vector3 vector3Base = new Vector3(1, 1, 1); // Valor padrão para a escala
-    public GameObject obstaclePrefab;
-    public TextMeshProUGUI JogadasText;
+
+
     public SpriteRenderer objetivo;
     public SpriteRenderer objetivoImage;
-    public int maxObejetivo = 10;
-    private int currentObjective;
+
+
     public TextMeshProUGUI obejectiveText;
-    public int MaxJogadas = 10;
-    private int currentJogadas;
-    public GameManager gameManager;
+    public TextMeshProUGUI JogadasText;
+
+
     public bool cabo;
     private bool isRefilling = false; // Variável para controlar o estado de refill
     public bool aumentei = false;
-    
+
 
     void Start()
     {
@@ -45,6 +60,11 @@ public class Board : MonoBehaviour
 
             Debug.Log("Game Over");
         }
+    }
+
+    void AumentarVida()
+    {
+        currentJogadas++;
     }
 
     void InitializeBoard()
@@ -78,6 +98,7 @@ public class Board : MonoBehaviour
             }
         }
 
+        // Após a inicialização, verifique se há matches e os processe
         List<Piece> piecesDestroyed = CheckForMatches(out int totalDestroyed);
         CheckObjective(piecesDestroyed);
     }
@@ -94,7 +115,7 @@ public class Board : MonoBehaviour
 
     int RandomFrut()
     {
-        return Random.Range(0, piecePrefab.Length);
+        return UnityEngine.Random.Range(0, piecePrefab.Length);
     }
 
     private void UpdateJogadaText()
@@ -142,7 +163,7 @@ public class Board : MonoBehaviour
 
     void SwapPieces(Piece piece1, Piece piece2)
     {
-        if (piece1.frutType == FrutType.Obstacle || piece2.frutType == FrutType.Obstacle) return; // Impede a troca se uma das peças for um obstáculo
+        if (piece1.frutType == FrutType.Obstacle || piece2.frutType == FrutType.Obstacle) return;
 
         int tempX = piece1.x;
         int tempY = piece1.y;
@@ -161,9 +182,26 @@ public class Board : MonoBehaviour
         piece2.AnimateScale(vector3Base, 0.2f);
         selectedPiece = null;
         currentJogadas--;
+
         List<Piece> piecesDestroyed = CheckForMatches(out int totalDestroyed);
-        CheckObjective(piecesDestroyed);
+
+        if (piecesDestroyed.Exists(p => p.IsPowerUp()))
+        {
+            ActivatePowerUp(piecesDestroyed);
+        }
+        else
+        {
+            if (totalDestroyed >= 4)
+            {
+                // Gera o power-up no local da peça movida (piece1)
+                CreatePowerUp(piece1.x, piece1.y, true); // Ajustar para a direção correta se necessário
+            }
+            CheckObjective(piecesDestroyed);
+        }
     }
+
+
+
 
     List<Piece> CheckForMatches(out int totalDestroyed)
     {
@@ -192,8 +230,22 @@ public class Board : MonoBehaviour
                             break;
                         }
                     }
-                    if (matchLength >= 3)
+                    if (matchLength == 3)
                     {
+                        for (int k = 0; k < matchLength; k++)
+                        {
+                            piecesToDestroy.Add(pieces[x + k, y]);
+                            totalDestroyed++;
+                        }
+                    }
+                    else if (matchLength >= 4)
+                    {
+                        // Cria o power-up horizontal
+                        int powerUpX = x + 1; // Ajuste a posição conforme necessário
+                        if (powerUpX < width && pieces[powerUpX, y] == null)
+                        {
+                            CreatePowerUp(powerUpX, y, true); // Power-up horizontal
+                        }
                         for (int k = 0; k < matchLength; k++)
                         {
                             piecesToDestroy.Add(pieces[x + k, y]);
@@ -218,8 +270,22 @@ public class Board : MonoBehaviour
                             break;
                         }
                     }
-                    if (matchLength >= 3)
+                    if (matchLength == 3)
                     {
+                        for (int k = 0; k < matchLength; k++)
+                        {
+                            piecesToDestroy.Add(pieces[x, y + k]);
+                            totalDestroyed++;
+                        }
+                    }
+                    else if (matchLength >= 4)
+                    {
+                        // Cria o power-up vertical
+                        int powerUpY = y + 1; // Ajuste a posição conforme necessário
+                        if (powerUpY < height && pieces[x, powerUpY] == null)
+                        {
+                            CreatePowerUp(x, powerUpY, false); // Power-up vertical
+                        }
                         for (int k = 0; k < matchLength; k++)
                         {
                             piecesToDestroy.Add(pieces[x, y + k]);
@@ -229,7 +295,7 @@ public class Board : MonoBehaviour
                 }
             }
         }
-
+        // Destruir as peças da lista e processar o refill
         foreach (Piece piece in piecesToDestroy)
         {
             if (piece != null)
@@ -244,6 +310,11 @@ public class Board : MonoBehaviour
 
         return piecesToDestroy;
     }
+
+
+
+
+
 
     void CheckObjective(List<Piece> piecesDestroyed)
     {
@@ -264,10 +335,12 @@ public class Board : MonoBehaviour
             // Verifica se o objetivo foi alcançado
             if (currentObjective >= maxObejetivo)
             {
-               // gameManager.LevelComplete();
+                //gameManager.LevelComplete(); // Descomentei para ativar a conclusão de nível
             }
         }
     }
+
+
 
     void DestroyAdjacentObstacles(List<Piece> piecesToDestroy)
     {
@@ -292,6 +365,8 @@ public class Board : MonoBehaviour
         }
     }
 
+
+
     IEnumerator AnimatePieceMovement(Piece piece, Vector3 targetPosition, float duration)
     {
         Vector3 startPosition = piece.transform.position;
@@ -307,30 +382,30 @@ public class Board : MonoBehaviour
         piece.transform.position = targetPosition;
     }
 
+
+
+
     IEnumerator RefillBoard()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.2f);
 
-        binaryArrayTest binaryArray = GetComponent<binaryArrayTest>();
-        bool[] initialBools = binaryArray.GetInitialBools();
         List<IEnumerator> animations = new List<IEnumerator>();
 
-        // Primeiro movimento das peças existentes para os espaços vazios
+        // Move as peças existentes para os espaços vazios abaixo dos espaços vazios
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                int index = x + y * width;
-                if (pieces[x, y] == null && (index >= initialBools.Length || !initialBools[index])) // Evitar mover para espaços "vazios"
+                if (pieces[x, y] == null)
                 {
                     for (int k = y + 1; k < height; k++)
                     {
                         if (pieces[x, k] != null)
                         {
                             animations.Add(AnimatePieceMovement(pieces[x, k], new Vector3(x, y, 0), 0.3f));
-                            pieces[x, k].Init(x, y, this);
                             pieces[x, y] = pieces[x, k];
                             pieces[x, k] = null;
+                            pieces[x, y].Init(x, y, this);
                             break;
                         }
                     }
@@ -347,15 +422,12 @@ public class Board : MonoBehaviour
 
         animations.Clear();
 
-        // Agora faz o refill para os espaços vazios que não são blocos vazios
+        // Agora faz o refill para os espaços vazios, exceto os espaços reservados para power-ups
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                int index = x + y * width;
-
-                // Verifica se o espaço pode ser preenchido e não é um espaço que deve ficar vazio
-                if (pieces[x, y] == null && (index >= initialBools.Length || !initialBools[index]))
+                if (pieces[x, y] == null)
                 {
                     GameObject newPiece = Instantiate(piecePrefab[RandomFrut()], new Vector3(x, height, 0), Quaternion.identity); // Cria a peça fora da tela
                     pieces[x, y] = newPiece.GetComponent<Piece>();
@@ -383,6 +455,119 @@ public class Board : MonoBehaviour
             yield return StartCoroutine(RefillBoard()); // Certifica que checa por matches repetidamente até não restar mais matches
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+    void CreatePowerUp(int x, int y, bool isHorizontal)
+    {
+        // Verifique se o espaço está vazio antes de criar o power-up
+        if (x >= 0 && x < width && y >= 0 && y < height && pieces[x, y] == null)
+        {
+            if (powerUpPrefab != null)
+            {
+                GameObject powerUpObject = Instantiate(powerUpPrefab, new Vector3(x, y, 0), Quaternion.identity);
+                Piece powerUpPiece = powerUpObject.GetComponent<Piece>();
+                if (powerUpPiece != null)
+                {
+                    powerUpPiece.Init(x, y, this);
+                    powerUpPiece.frutType = FrutType.PowerUp; // Ajuste o tipo do power-up
+                    pieces[x, y] = powerUpPiece; // Coloca o power-up no grid
+                }
+            }
+            else
+            {
+                Debug.LogError("Prefab de PowerUp não atribuído.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Não é possível criar o power-up na posição ({x}, {y}) porque o espaço está ocupado.");
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    void ActivatePowerUp(List<Piece> piecesDestroyed)
+    {
+        Piece powerUpPiece = piecesDestroyed.Find(p => p.IsPowerUp());
+
+        if (powerUpPiece != null)
+        {
+            bool isHorizontal = true; // Ajuste conforme a necessidade
+
+            // Destruir linha com base na direção
+            DestroyLine(powerUpPiece, isHorizontal);
+            pieces[powerUpPiece.x, powerUpPiece.y] = null;
+            Destroy(powerUpPiece.gameObject);
+        }
+    }
+
+
+
+
+
+
+    public void DestroyLine(Piece piece, bool isHorizontal)
+    {
+        int x = piece.x;
+        int y = piece.y;
+
+        if (isHorizontal)
+        {
+            // Destruir linha horizontal
+            for (int i = 0; i < width; i++)
+            {
+                if (pieces[i, y] != null)
+                {
+                    Destroy(pieces[i, y].gameObject);
+                    pieces[i, y] = null;
+                }
+            }
+        }
+        else
+        {
+            // Destruir linha vertical
+            for (int i = 0; i < height; i++)
+            {
+                if (pieces[x, i] != null)
+                {
+                    Destroy(pieces[x, i].gameObject);
+                    pieces[x, i] = null;
+                }
+            }
+        }
+    }
+
+
+
+
+    bool DetermineLineDirection()
+    {
+        // Exemplo básico: Se o power-up foi ativado verticalmente, retorna false; horizontalmente, retorna true
+        return this.transform.position.x > this.transform.position.y;
+    }
+
+
+
+
 
 
 }

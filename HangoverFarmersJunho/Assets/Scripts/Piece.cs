@@ -4,12 +4,13 @@ using UnityEngine;
 
 public class Piece : MonoBehaviour
 {
-    
+
     public FrutType frutType; // Tipo da fruta da peça
     public int x; // Posição X da peça no tabuleiro
     public int y; // Posição Y da peça no tabuleiro
     public Board board; // Referência ao tabuleiro
     public bool isInvisible; // Determina se a peça é invisível
+    public bool isPowerUp; // Identifica se a peça é um power-up
 
     public void Init(int x, int y, Board board)
     {
@@ -18,6 +19,29 @@ public class Piece : MonoBehaviour
         this.board = board;
         SetVisibility(!isInvisible); // Define a visibilidade ao inicializar
     }
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        Piece otherPiece = collision.gameObject.GetComponent<Piece>();
+        if (otherPiece != null && otherPiece.frutType != FrutType.Obstacle)
+        {
+            // Supondo que você saiba a direção da linha a ser destruída
+            bool isHorizontal = DetermineLineDirection(); // Implementar essa função conforme a lógica do seu jogo
+
+            if (IsPowerUp())
+            {
+                // Verifique se o power-up deve destruir a linha e forneça a direção correta
+                board.DestroyLine(this, isHorizontal);
+            }
+        }
+    }
+
+    bool DetermineLineDirection()
+    {
+        // Implemente a lógica para determinar se a linha deve ser horizontal ou vertical
+        return true; // Exemplo: retorne true para horizontal e false para vertical
+    }
+
 
 
 
@@ -59,6 +83,14 @@ public class Piece : MonoBehaviour
 
         transform.localScale = targetScale; // Garante que a escala final seja exatamente a desejada
     }
+
+
+    public bool IsPowerUp()
+    {
+        return frutType == FrutType.LinhaDestruidora;
+    }
+
+
 }
 
 // Enumeração para os tipos de frutas disponíveis
@@ -73,5 +105,9 @@ public enum FrutType
     Uva,
     Poder,
     Obstacle,
+    PowerUp,
+    LinhaDestruidora,
+    PowerUpVertical,
+    PowerUpHorizontal,
     Vazio
 }

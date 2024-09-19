@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        SceneManager.activeSceneChanged += voltar;
+        //SceneManager.activeSceneChanged += voltar;
     }
     public void updateScene(string Main)
     {

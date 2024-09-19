@@ -984,6 +984,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 7
   height: 7
+  MaxJogadas: 5
+  maxObejetivo: 20
+  powerUpPrefab: {fileID: 4533694190546670133, guid: 891a0ca7a8295dc4c8a9a9826b1e9c04, type: 3}
+  obstaclePrefab: {fileID: 6945647291313568819, guid: 7349b2b987daf8f42b7ce9399ae15e49, type: 3}
   piecePrefab:
   - {fileID: 5090536341604393258, guid: 9aa81cd871ed5b542b32e4c614621727, type: 3}
   - {fileID: 7022550533026481816, guid: 2d0dd9004093583489faa23ff0cc7e8e, type: 3}
@@ -999,15 +1003,13 @@ MonoBehaviour:
   - {fileID: 9183981850829403422, guid: 79b7dfacb2c627b4bb8e7f163d475175, type: 3}
   - {fileID: 5018873714049314917, guid: 70931bad00c870d4b90dd5d3d3de209a, type: 3}
   - {fileID: 2915029873176705244, guid: 3163ddd82c98c3545bcee41230480b09, type: 3}
+  gameManager: {fileID: 721332084}
+  linhaDestruidoraPrefab: {fileID: 6188522385137599021, guid: bf6a5d47a5163b64aaee79bbc692ce06, type: 3}
   vector3Base: {x: 0.8, y: 0.8, z: 0.8}
-  obstaclePrefab: {fileID: 6945647291313568819, guid: 7349b2b987daf8f42b7ce9399ae15e49, type: 3}
-  JogadasText: {fileID: 474216701}
   objetivo: {fileID: 2842457981625605142, guid: 48f4979ab729d1440b4d083e886c57ad, type: 3}
   objetivoImage: {fileID: 0}
-  maxObejetivo: 20
   obejectiveText: {fileID: 1217384587}
-  MaxJogadas: 5
-  gameManager: {fileID: 721332084}
+  JogadasText: {fileID: 474216701}
   cabo: 0
   aumentei: 0
 --- !u!4 &759014405
